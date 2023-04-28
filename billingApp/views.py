@@ -2,14 +2,17 @@ from django.shortcuts import render
 
 from rest_framework import generics, permissions
 from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .models import BillingProfile, Discounts, CheckoutMethods, PlatformCharges, Eligibility, Orders, Payment, BillingRules
-from .serializers import BillingProfileSerializer
+from .serializers import BillingProfileSerializer, DiscountsSerializer
 from django.http import HttpResponse
 
 # single responsibility app
 
 
+@api_view(['POST'])
 def create_billing_profile(request):
     if request.method == 'POST':
         owner_id = request.POST.get('owner_id')
@@ -18,7 +21,8 @@ def create_billing_profile(request):
 
         # Validate input
         if not owner_id or not item_id or not amount:
-            return HttpResponse("Invalid input")
+            return Response("Invalid input", status=status.HTTP_400_BAD_REQUEST)
+            # return HttpResponse("Invalid input")
 
         # Create a new billing profile
         billing_profile = BillingProfile.objects.create(
@@ -30,27 +34,15 @@ def create_billing_profile(request):
         return HttpResponse("Billing profile created successfully")
 
 
+@api_view(['POST'])
 def create_discount(request):
     if request.method == 'POST':
-        owner_id = request.POST.get('owner_id')
-        billing_profile_id = request.POST.get('billing_profile_id')
-        valid_till = request.POST.get('valid_till')
-        eligibility_id = request.POST.get('eligibility_id')
+        d_serializer = DiscountsSerializer(data=request.data)
+        if d_serializer.is_valid():
+            d_serializer.save()
+            return Response({'data': d_serializer.data}, status=status.HTTP_201_CREATED)
 
-        # Validate input
-        if not owner_id or not billing_profile_id or not valid_till or not eligibility_id:
-            return HttpResponse("Invalid input")
-
-        # Create a new discount
-        discount = Discounts.objects.create(
-            ownerId=owner_id,
-            billingProfile_id=billing_profile_id,
-            validTill=valid_till,
-            eligibility_id=eligibility_id,
-            status=True
-        )
-
-        return HttpResponse("Discount created successfully")
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 def create_checkout_method(request):

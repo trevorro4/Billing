@@ -4,8 +4,10 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from .views import BillingProfileList, BillingProfileDetail
+from . import views
 
 urlpatterns = [
+    path('createDiscount/', views.create_discount),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/billing-profiles/', BillingProfileList.as_view(),
